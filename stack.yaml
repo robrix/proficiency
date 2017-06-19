@@ -1,0 +1,17 @@
+resolver: lts-8.18
+packages:
+- '.'
+- location:
+    git: https://github.com/robrix/ghc-events-parallel.git
+    commit: 0071ad28e508ab56511c726072a2077f9108cd34
+  extra-dep: true
+- location:
+    git: https://github.com/robrix/hp2any.git
+    commit: b330a7291d90ad561489d892800d64ea5ab0cfac
+  extra-dep: true
+  subdirs:
+  - core
+extra-deps:
+- ghc-events-parallel-0.5.0.1
+- hp2any-core-0.11.2
+- binary-0.7.6.1
