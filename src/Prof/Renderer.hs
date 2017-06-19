@@ -36,11 +36,11 @@ renderProfile Profile{..} = H.docTypeHtml $ do
       S.svg
       ! S.customAttribute (S.stringTag "xmlns") (S.toValue "http://www.w3.org/2000/svg")
       ! S.customAttribute (S.stringTag "xmlns:xlink") (S.toValue "http://www.w3.org/1999/xlink")
-      ! A.width (toValue (maybe (60 :: Int) ((* 60) . ceiling . fst . fst) (uncons prSamples)))
-      ! A.height (toValue (maybe (60 :: Int) ((* 60) . ceiling . (* (1/1024/1024)) . fromIntegral . maximum . fmap (snd . maximumBy (compare `on` snd) . snd)) (nonEmpty prSamples))) $ do
+      ! A.width (toValue graphWidth)
+      ! A.height (toValue graphHeight) $ do
         S.title $ S.string (prJob <> " " <> prDate)
 
-        S.g ! A.transform (S.scale 60 (60/1024/1024)) $
+        S.g ! A.transform (S.translate 0 graphHeight `mappend` S.scale 60 (-60/1024/1024)) $
           foldr (>>) (pure ()) $ Map.mapWithKey toPath . Map.unionsWith (<>) . fmap (fmap pure) $ zipWith toMap [0..] (reverse prSamples)
   where toPath :: CostCentreId -> [(Int, Time, Double)] -> S.Svg
         toPath costCentreId points = S.path ! A.d (S.mkPath (snd (foldl' step (pred 0, S.m 0 0) points))) ! A.id_ (S.toValue costCentreId)
@@ -51,6 +51,8 @@ renderProfile Profile{..} = H.docTypeHtml $ do
           S.l x y
         toMap :: Int -> (Time, ProfileSample) -> Map.IntMap (Int, Time, Double)
         toMap i (time, samples) = Map.fromList (fmap ((i, time,) . fromIntegral) <$> samples)
+        graphWidth = maybe (60 :: Int) ((* 60) . ceiling . fst . fst) (uncons prSamples)
+        graphHeight = maybe (60 :: Int) ((* 60) . ceiling . (* (1/1024/1024)) . fromIntegral . maximum . fmap (snd . maximumBy (compare `on` snd) . snd)) (nonEmpty prSamples)
 
 
 printRendering :: FilePath -> FilePath -> IO ()
