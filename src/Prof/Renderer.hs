@@ -1,9 +1,12 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RecordWildCards, TupleSections #-}
 module Prof.Renderer where
 
+import qualified Data.ByteString.Char8 as B
+import Data.Foldable (foldl')
+import qualified Data.IntMap as Map
 import Data.Semigroup
 import Profiling.Heap.Read (readProfile)
-import Profiling.Heap.Types (Profile(..))
+import Profiling.Heap.Types
 import Text.Blaze.Svg.Renderer.Pretty
 import Text.Blaze.Svg11
 import qualified Text.Blaze.Svg11.Attributes as A
@@ -16,6 +19,18 @@ renderProfile Profile{..} = do
     title $ string (prJob <> " " <> prDate)
 
     text_ ! A.x (toValue (10 :: Int)) ! A.y (toValue (10 :: Int)) $ string (prJob <> " " <> prDate)
+
+    g ! A.transform (translate 10 30) $
+      foldr (>>) (pure ()) $ Map.mapWithKey toPath . Map.unionsWith (<>) . fmap (fmap (:[])) $ zipWith toMap [0..] (reverse prSamples)
+  where toPath :: CostCentreId -> [(Int, Time, Double)] -> Svg
+        toPath costCentreID points = path ! A.d (mkPath (snd (foldl' step (pred 0, m 0 0) points))) ! A.id_ (toValue costCentreID)
+        step (prevI, steps) (i, x, y) = let (x', y') = (x * 60, y * 10/1024/1024) in (,) i . (steps >>) $ if prevI < pred i then do
+          m x' (0 :: Double)
+          l x' y'
+        else
+          l x' y'
+        toMap :: Int -> (Time, ProfileSample) -> Map.IntMap (Int, Time, Double)
+        toMap i (time, samples) = Map.fromList (fmap ((i, time,) . fromIntegral) <$> samples)
 
 
 printRendering :: FilePath -> FilePath -> IO ()
