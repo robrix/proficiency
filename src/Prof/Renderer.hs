@@ -1,18 +1,19 @@
 {-# LANGUAGE RecordWildCards, TupleSections #-}
 module Prof.Renderer where
 
-import qualified Data.ByteString.Lazy as B
-import qualified Data.ByteString.Char8 as B hiding (writeFile)
+import qualified Data.ByteString.Lazy as B hiding (unpack)
+import qualified Data.ByteString.Char8 as B (unpack)
 import Data.Char
-import Data.Foldable (foldl')
+import Data.Foldable (foldl', for_)
 import qualified Data.IntMap as Map
+import Data.List as List
 import Data.Semigroup
 import Profiling.Heap.Read (readProfile)
 import Profiling.Heap.Types
 import Text.Blaze.Svg.Renderer.Utf8
 import Text.Blaze
 import qualified Text.Blaze.XHtml5 as H
-import qualified Text.Blaze.XHtml5.Attributes as A
+import qualified Text.Blaze.XHtml5.Attributes as AH
 import qualified Text.Blaze.Svg11 as S
 import qualified Text.Blaze.Svg11.Attributes as A
 
@@ -21,15 +22,19 @@ renderProfile :: Profile -> S.Svg
 renderProfile Profile{..} = H.docTypeHtml $ do
   H.head $ do
     H.title $ string (prJob <> " " <> prDate)
-    H.link ! A.rel (toValue "stylesheet") ! A.href (toValue "style.css")
+    H.link ! AH.rel (toValue "stylesheet") ! AH.href (toValue "style.css")
   H.body $ do
     H.pre $ do
       H.code $ string (dropWhile isSpace prJob)
-    S.svg ! S.customAttribute (S.stringTag "xmlns") (S.toValue "http://www.w3.org/2000/svg") ! S.customAttribute (S.stringTag "xmlns:xlink") (S.toValue "http://www.w3.org/1999/xlink") $ do
-      S.title $ S.string (prJob <> " " <> prDate)
+    H.ul ! A.id_ (toValue "symbols") $ do
+      for_ (Map.toList prNames) $ \ (costCentreId, name) ->
+        H.li ! A.id_ (toValue costCentreId) $ string (B.unpack name)
+    H.div ! AH.class_ (toValue "graph") $
+      S.svg ! S.customAttribute (S.stringTag "xmlns") (S.toValue "http://www.w3.org/2000/svg") ! S.customAttribute (S.stringTag "xmlns:xlink") (S.toValue "http://www.w3.org/1999/xlink") ! A.width (toValue (maybe (0 :: Int) ((* 60) . ceiling . fst . fst) (uncons prSamples))) $ do
+        S.title $ S.string (prJob <> " " <> prDate)
 
-      S.g ! A.transform (S.scale 60 (10/1024/1024)) $
-        foldr (>>) (pure ()) $ Map.mapWithKey toPath . Map.unionsWith (<>) . fmap (fmap (:[])) $ zipWith toMap [0..] (reverse prSamples)
+        S.g ! A.transform (S.scale 60 (10/1024/1024)) $
+          foldr (>>) (pure ()) $ Map.mapWithKey toPath . Map.unionsWith (<>) . fmap (fmap (:[])) $ zipWith toMap [0..] (reverse prSamples)
   where toPath :: CostCentreId -> [(Int, Time, Double)] -> S.Svg
         toPath costCentreId points = S.path ! A.d (S.mkPath (snd (foldl' step (pred 0, S.m 0 0) points))) ! A.id_ (S.toValue costCentreId)
         step (prevI, steps) (i, x, y) = (,) i . (steps >>) $ if prevI < pred i then do
