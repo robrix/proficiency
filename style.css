@@ -1,5 +1,6 @@
 body {
   margin: 0;
+  padding: 15px;
 }
 
 svg {
@@ -27,6 +28,7 @@ pre {
   line-height: 20px;
   font-size: 12px;
   padding: 16px;
+  margin: 0;
   margin-bottom: 16px;
   white-space: pre;
   word-wrap: normal;
