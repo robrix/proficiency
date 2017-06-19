@@ -20,15 +20,15 @@ renderProfile Profile{..} = do
 
     text_ ! A.x (toValue (10 :: Int)) ! A.y (toValue (10 :: Int)) $ string (prJob <> " " <> prDate)
 
-    g ! A.transform (translate 10 30) $
+    g ! A.transform (translate 10 30 `mappend` scale 60 (10/1024/1024)) $
       foldr (>>) (pure ()) $ Map.mapWithKey toPath . Map.unionsWith (<>) . fmap (fmap (:[])) $ zipWith toMap [0..] (reverse prSamples)
   where toPath :: CostCentreId -> [(Int, Time, Double)] -> Svg
         toPath costCentreID points = path ! A.d (mkPath (snd (foldl' step (pred 0, m 0 0) points))) ! A.id_ (toValue costCentreID)
-        step (prevI, steps) (i, x, y) = let (x', y') = (x * 60, y * 10/1024/1024) in (,) i . (steps >>) $ if prevI < pred i then do
-          m x' (0 :: Double)
-          l x' y'
+        step (prevI, steps) (i, x, y) = (,) i . (steps >>) $ if prevI < pred i then do
+          m x (0 :: Double)
+          l x y
         else
-          l x' y'
+          l x y
         toMap :: Int -> (Time, ProfileSample) -> Map.IntMap (Int, Time, Double)
         toMap i (time, samples) = Map.fromList (fmap ((i, time,) . fromIntegral) <$> samples)
 
