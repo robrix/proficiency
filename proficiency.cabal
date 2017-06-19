@@ -18,6 +18,7 @@ library
   exposed-modules:     Prof.Renderer
   build-depends:       base >= 4.7 && < 5
                      , blaze-svg
+                     , bytestring
                      , containers
                      , ghc-events-parallel
                      , ghc-prof
