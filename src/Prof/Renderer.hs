@@ -41,7 +41,7 @@ renderProfile Profile{..} = H.docTypeHtml $ do
         S.title $ S.string (prJob <> " " <> prDate)
 
         S.g ! A.transform (S.scale 60 (60/1024/1024)) $
-          foldr (>>) (pure ()) $ Map.mapWithKey toPath . Map.unionsWith (<>) . fmap (fmap (:[])) $ zipWith toMap [0..] (reverse prSamples)
+          foldr (>>) (pure ()) $ Map.mapWithKey toPath . Map.unionsWith (<>) . fmap (fmap pure) $ zipWith toMap [0..] (reverse prSamples)
   where toPath :: CostCentreId -> [(Int, Time, Double)] -> S.Svg
         toPath costCentreId points = S.path ! A.d (S.mkPath (snd (foldl' step (pred 0, S.m 0 0) points))) ! A.id_ (S.toValue costCentreId)
         step (prevI, steps) (i, x, y) = (,) i . (steps >>) $ if prevI < pred i then do
