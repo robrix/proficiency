@@ -26,7 +26,7 @@ renderProfile Profile{..} = H.docTypeHtml $ do
   H.body $ do
     H.pre $ do
       H.code $ string (dropWhile isSpace prJob)
-    H.ul ! A.id_ (toValue "symbols") $ do
+    H.ul ! A.id_ (toValue "legend") $ do
       for_ (Map.toList prNames) $ \ (costCentreId, name) ->
         H.li ! A.id_ (toValue costCentreId) $ string (B.unpack name)
     H.div ! AH.class_ (toValue "graph") $
