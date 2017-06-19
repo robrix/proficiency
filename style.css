@@ -27,6 +27,10 @@ path {
   vector-effect: non-scaling-stroke;
 }
 
+path:hover {
+  stroke-width: 1.0;
+}
+
 pre {
   background-color: rgb(246, 248, 250);
   color: rgb(36, 41, 46);
