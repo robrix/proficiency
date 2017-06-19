@@ -5,7 +5,7 @@ text {
 }
 
 path {
-  stroke-width: 0.1;
+  stroke-width: 0.5;
   stroke: rgba(0, 0, 0, 1);
   fill: none;
   vector-effect: non-scaling-stroke;
