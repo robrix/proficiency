@@ -38,8 +38,6 @@ renderProfile Profile{..} = H.docTypeHtml $ do
       ! S.customAttribute (S.stringTag "xmlns:xlink") (S.toValue "http://www.w3.org/1999/xlink")
       ! A.width (toValue graphWidth)
       ! A.height (toValue graphHeight) $ do
-        S.title $ S.string (prJob <> " " <> prDate)
-
         S.g ! A.transform (S.translate 0 graphHeight `mappend` S.scale 60 (-60/1024/1024)) $
           foldr (>>) (pure ()) $ Map.mapWithKey toPath . Map.unionsWith (<>) . fmap (fmap pure) $ zipWith toMap [0..] (reverse prSamples)
   where toPath :: CostCentreId -> [(Int, Time, Double)] -> S.Svg
