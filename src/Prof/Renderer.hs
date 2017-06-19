@@ -23,12 +23,12 @@ renderProfile Profile{..} = H.docTypeHtml $ do
     H.title $ string (prJob <> " " <> prDate)
     H.link ! A.rel (toValue "stylesheet") ! A.href (toValue "style.css")
   H.body $ do
+    H.pre $ do
+      H.code $ string (dropWhile isSpace prJob)
     S.svg ! S.customAttribute (S.stringTag "xmlns") (S.toValue "http://www.w3.org/2000/svg") ! S.customAttribute (S.stringTag "xmlns:xlink") (S.toValue "http://www.w3.org/1999/xlink") $ do
       S.title $ S.string (prJob <> " " <> prDate)
 
-      S.text_ ! A.x (S.toValue (10 :: Int)) ! A.y (S.toValue (10 :: Int)) $ S.string (prJob <> " " <> prDate)
-
-      S.g ! A.transform (S.translate 10 30 `mappend` S.scale 60 (10/1024/1024)) $
+      S.g ! A.transform (S.scale 60 (10/1024/1024)) $
         foldr (>>) (pure ()) $ Map.mapWithKey toPath . Map.unionsWith (<>) . fmap (fmap (:[])) $ zipWith toMap [0..] (reverse prSamples)
   where toPath :: CostCentreId -> [(Int, Time, Double)] -> S.Svg
         toPath costCentreID points = S.path ! A.d (S.mkPath (snd (foldl' step (pred 0, S.m 0 0) points))) ! A.id_ (S.toValue costCentreID)

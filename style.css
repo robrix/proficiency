@@ -15,3 +15,20 @@ path {
   fill: none;
   vector-effect: non-scaling-stroke;
 }
+
+pre {
+  background-color: rgb(246, 248, 250);
+  color: rgb(36, 41, 46);
+  line-height: 20px;
+  font-size: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  white-space: pre;
+  word-wrap: normal;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+code {
+  font-family: Hasklig, monospace;
+}
