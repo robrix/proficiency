@@ -18,6 +18,7 @@ library
   exposed-modules:     Prof.Renderer
   build-depends:       base >= 4.7 && < 5
                      , blaze-html
+                     , blaze-markup
                      , blaze-svg
                      , bytestring
                      , containers
