@@ -121,7 +121,7 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
         toLegend hpId name =
           let cc@CostCentre{..} = costCentreForHpIdAndName hpId name in
           case costCentreSource of
-            Just source -> H.a ! AH.title (toValue source) $ string $ formattedName cc
+            Just source | source `notElem` ["<no location info", "<entire-module", "<built-in"] -> H.a ! AH.title (toValue source) $ string $ formattedName cc
             _ -> string $ formattedName cc
         formattedName CostCentre{..} = maybe costCentreName (<> "." <> costCentreName) costCentreModuleName
 
