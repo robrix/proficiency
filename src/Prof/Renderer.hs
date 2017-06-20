@@ -67,8 +67,8 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
               S.text_ ! A.x (toValue ((-5) :: Int)) ! A.y (toValue (graphHeight - i * 60)) ! A.class_ "label y" $ string (show i <> "M")
     H.script ! AH.type_ "text/javascript" $ string "run();"
 
-  where toPath :: Hp.CostCentreId -> [(Int, Hp.Time, Double)] -> S.Svg
-        toPath hpId points = S.path ! A.d (S.mkPath p) ! A.id_ (toValue ("path-" <> show hpId)) ! dataAttribute "id" (toValue hpId) ! A.stroke (colour hpId) ! A.fill (colour hpId)
+  where toPath :: Hp.CostCentreId -> (Maybe CostCentre, [(Int, Hp.Time, Double)]) -> S.Svg
+        toPath hpId (_, points) = S.path ! A.d (S.mkPath p) ! A.id_ (toValue ("path-" <> show hpId)) ! dataAttribute "id" (toValue hpId) ! A.stroke (colour hpId) ! A.fill (colour hpId)
           where p = let (_, x, path) = foldl' step (pred 0, 0, S.m 0 0) points in path >> S.l x 0
         step (prevI, prevX, steps) (i, x, y) = (i,x,) . (steps >>) $ if prevI < pred i then do
           S.l x 0
@@ -76,7 +76,9 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
           S.l x y
         else
           S.l x y
-        costCentreHpMap = Map.unionsWith (<>) . fmap (fmap pure) $ zipWith toMap [0..] (reverse prSamples)
+        costCentreHpMap = let merged = Map.unionsWith (<>) (fmap pure <$> zipWith toMap [0..] (reverse prSamples)) in
+          Map.mapWithKey findCostCentre merged
+        findCostCentre hpId samples = let hpName = prNames Map.! hpId in (parseHpName (B.unpack hpName), samples)
         toMap :: Int -> (Hp.Time, Hp.ProfileSample) -> Map.IntMap (Int, Hp.Time, Double)
         toMap i (time, samples) = Map.fromList (fmap ((i, time,) . (* (1/1024/1024)) . fromIntegral) <$> samples)
         graphSeconds = maybe (1 :: Int) (ceiling . fst . fst) (uncons prSamples)
@@ -106,10 +108,15 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
         costCentresById = Map.fromList $ let Just ccs = Prof.costCentresOrderBy Prof.costCentreNo prof in foldMap (\ cc -> [(Prof.costCentreNo cc, toCC cc)]) ccs
         toCC Prof.CostCentre{..} = CostCentre costCentreNo (T.unpack costCentreName) (T.unpack costCentreModule) (fmap T.unpack costCentreSrc)
 
-        toLegend hpId name
+        parseHpName name
           | matched <- readParen True reads name :: [(Int, String)]
-          , (costCentreId, _) : _ <- matched
-          , Just CostCentre{..} <- Map.lookup costCentreId costCentresById
+          , (profId, _) : _ <- matched
+          = Map.lookup profId costCentresById
+          | otherwise
+          = Nothing
+
+        toLegend hpId name
+          | Just CostCentre{..} <- parseHpName name
           = case costCentreSource of
             Just source -> H.a ! AH.title (toValue source) $ string $ costCentreModuleName <> "." <> costCentreName
             _ -> string $ costCentreModuleName <> "." <> costCentreName
