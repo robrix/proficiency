@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings, RecordWildCards, TupleSections #-}
 module Prof.Renderer where
 
+import Data.Bifunctor (first)
 import qualified Data.ByteString.Lazy as B hiding (unpack)
 import qualified Data.ByteString.Char8 as B (unpack)
 import Data.Char
@@ -10,6 +11,7 @@ import Data.Function
 import qualified Data.IntMap as IntMap
 import Data.List as List
 import Data.List.NonEmpty (nonEmpty)
+import qualified Data.Map as Map
 import Data.Ord
 import Data.Semigroup
 import qualified Data.Text as T
@@ -105,7 +107,9 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
 
         inRange x (l, u) = l <= x && x <= u
 
-        costCentresById = IntMap.fromList $ let Just ccs = Prof.costCentresOrderBy Prof.costCentreNo prof in foldMap (\ cc -> [(Prof.costCentreNo cc, toCC cc)]) ccs
+        (costCentresById, costCentresByName) = let Just ccs = Prof.costCentresOrderBy Prof.costCentreNo prof
+                                                   centres = foldMap (\ cc -> [((Prof.costCentreNo cc, T.unpack (Prof.costCentreName cc)), toCC cc)]) ccs in
+          (IntMap.fromList $ first fst <$> centres, Map.fromList $ first snd <$> centres)
         toCC Prof.CostCentre{..} = CostCentre costCentreNo (T.unpack costCentreName) (T.unpack costCentreModule) (fmap T.unpack costCentreSrc)
 
         parseHpName name
