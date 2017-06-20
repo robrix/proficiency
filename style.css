@@ -62,3 +62,10 @@ g#grid line {
   fill: none;
   vector-effect: non-scaling-stroke;
 }
+
+text.label.x {
+  font-size: 9px;
+  dominant-baseline: hanging;
+  alignment-baseline: hanging;
+  text-anchor: middle;
+}
