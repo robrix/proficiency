@@ -35,6 +35,11 @@ path.hidden {
   display: none;
 }
 
+path.active.hidden {
+  display: initial;
+  fill: none;
+}
+
 pre {
   background-color: rgb(246, 248, 250);
   color: rgb(36, 41, 46);
