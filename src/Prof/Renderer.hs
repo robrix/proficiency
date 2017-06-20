@@ -43,11 +43,12 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
       H.input ! AH.type_ "checkbox" ! AH.checked "" ! AH.id "toggle-all"
       H.input ! AH.type_ "search" ! AH.id "filter-legend"
       H.ul $ do
-        for_ (toList costCentresById) $ \ cc@CostCentre{..} ->
-          H.li ! A.id_ (stringValue ("legend-" <> show costCentreProfId)) ! dataAttribute "id" (toValue costCentreProfId) ! AH.style ("color: " `mappend` colour costCentreProfId) $ do
+        for_ (toList costCentresById) $ \ cc@CostCentre{..} -> case costCentreHpId of
+          Just _ -> H.li ! A.id_ (stringValue ("legend-" <> show costCentreProfId)) ! dataAttribute "id" (toValue costCentreProfId) ! AH.style ("color: " `mappend` colour costCentreProfId) $ do
             H.label $ do
               H.input ! AH.type_ "checkbox" ! AH.checked "" ! dataAttribute "id" (toValue costCentreProfId)
               toLegend cc
+          _ -> pure ()
     H.div ! AH.class_ "graph" $
       S.svg
       ! S.customAttribute "xmlns" "http://www.w3.org/2000/svg"
