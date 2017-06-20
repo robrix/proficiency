@@ -22,6 +22,12 @@ text {
 path {
   stroke-width: 0.5;
   vector-effect: non-scaling-stroke;
+  fill-opacity: 0.5;
+}
+
+path.active {
+  stroke-width: 1.0;
+  fill-opacity: 1.0;
 }
 
 pre {
