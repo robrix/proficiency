@@ -59,10 +59,16 @@ function run() {
   let filterLegend = document.querySelector("#filter-legend");
   filterLegend.addEventListener('input', event => {
     if (filterLegend.value !== "") {
+      var pattern;
+      try {
+        pattern = new RegExp(filterLegend.value, "i")
+      } catch (_) {
+        pattern = filterLegend.value.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      }
       document.querySelector("#legend").classList.add("filtered");
       document.querySelector("#graph").classList.add("filtered");
       for (let elem of document.querySelectorAll("#legend li, #graph path")) {
-        if (elem.getAttribute("data-name").match(new RegExp(filterLegend.value, "i"))) {
+        if (elem.getAttribute("data-name").match(pattern)) {
           elem.classList.add("filtered");
         } else {
           elem.classList.remove("filtered");
