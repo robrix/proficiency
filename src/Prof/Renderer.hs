@@ -7,7 +7,7 @@ import Data.Char
 import Data.Fixed
 import Data.Foldable (foldl', for_)
 import Data.Function
-import qualified Data.IntMap as Map
+import qualified Data.IntMap as IntMap
 import Data.List as List
 import Data.List.NonEmpty (nonEmpty)
 import Data.Ord
@@ -39,7 +39,7 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
       H.input ! AH.type_ "checkbox" ! AH.checked "" ! AH.id "toggle-all"
       H.input ! AH.type_ "search"
       H.ul $ do
-        for_ (Map.toList prNames) $ \ (hpId, name) ->
+        for_ (IntMap.toList prNames) $ \ (hpId, name) ->
           H.li ! A.id_ (stringValue ("legend-" <> show hpId)) ! dataAttribute "id" (toValue hpId) ! AH.style ("color: " `mappend` colour hpId) $ do
             H.label $ do
               H.input ! AH.type_ "checkbox" ! AH.checked "" ! dataAttribute "id" (toValue hpId)
@@ -53,7 +53,7 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
         S.g ! A.transform (S.translate 25 (5 :: Int)) $ do
           S.g ! A.id_ "graph" ! A.transform (S.translate 0 graphHeight `mappend` S.scale 60 (-60)) $ do
             S.g ! A.id_ "overlaid" $ do
-              foldr (>>) (pure ()) $ Map.mapWithKey toPath costCentreHpMap
+              foldr (>>) (pure ()) $ IntMap.mapWithKey toPath costCentreHpMap
             S.g ! A.id_ "grid" $ do
               for_ [0..graphSeconds] $ \ i -> do
                 S.line ! A.x1 (toValue i) ! A.x2 (toValue i) ! A.y1 (toValue (0 :: Int)) ! A.y2 (toValue graphMBs)
@@ -76,11 +76,11 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
           S.l x y
         else
           S.l x y
-        costCentreHpMap = let merged = Map.unionsWith (<>) (fmap pure <$> zipWith toMap [0..] (reverse prSamples)) in
-          Map.mapWithKey (\ hpId samples -> (costCentreForHpId hpId, samples)) merged
-        costCentreForHpId hpId = let hpName = B.unpack $ prNames Map.! hpId in parseHpName hpName
-        toMap :: Int -> (Hp.Time, Hp.ProfileSample) -> Map.IntMap (Int, Hp.Time, Double)
-        toMap i (time, samples) = Map.fromList (fmap ((i, time,) . (* (1/1024/1024)) . fromIntegral) <$> samples)
+        costCentreHpMap = let merged = IntMap.unionsWith (<>) (fmap pure <$> zipWith toMap [0..] (reverse prSamples)) in
+          IntMap.mapWithKey (\ hpId samples -> (costCentreForHpId hpId, samples)) merged
+        costCentreForHpId hpId = let hpName = B.unpack $ prNames IntMap.! hpId in parseHpName hpName
+        toMap :: Int -> (Hp.Time, Hp.ProfileSample) -> IntMap.IntMap (Int, Hp.Time, Double)
+        toMap i (time, samples) = IntMap.fromList (fmap ((i, time,) . (* (1/1024/1024)) . fromIntegral) <$> samples)
         graphSeconds = maybe (1 :: Int) (ceiling . fst . fst) (uncons prSamples)
         graphMBs = maybe (1 :: Int) (ceiling . (* (1/1024/1024)) . fromIntegral . maximum . fmap (snd . maximumBy (compare `on` snd) . snd)) (nonEmpty prSamples)
         graphWidth = graphSeconds * 60
@@ -105,13 +105,13 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
 
         inRange x (l, u) = l <= x && x <= u
 
-        costCentresById = Map.fromList $ let Just ccs = Prof.costCentresOrderBy Prof.costCentreNo prof in foldMap (\ cc -> [(Prof.costCentreNo cc, toCC cc)]) ccs
+        costCentresById = IntMap.fromList $ let Just ccs = Prof.costCentresOrderBy Prof.costCentreNo prof in foldMap (\ cc -> [(Prof.costCentreNo cc, toCC cc)]) ccs
         toCC Prof.CostCentre{..} = CostCentre costCentreNo (T.unpack costCentreName) (T.unpack costCentreModule) (fmap T.unpack costCentreSrc)
 
         parseHpName name
           | matched <- readParen True reads name :: [(Int, String)]
           , (profId, _) : _ <- matched
-          = Map.lookup profId costCentresById
+          = IntMap.lookup profId costCentresById
           | otherwise
           = Nothing
 
