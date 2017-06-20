@@ -2,7 +2,7 @@
 module Prof.Renderer where
 
 import Control.Applicative
-import Data.Bifunctor (first)
+import Data.Bifunctor (bimap, first)
 import qualified Data.ByteString.Lazy as B hiding (unpack)
 import qualified Data.ByteString.Char8 as B (unpack)
 import Data.Char
@@ -110,18 +110,21 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
         inRange x (l, u) = l <= x && x <= u
 
         hpIdsByProfId = IntMap.fromList $ uncurry pair <$> IntMap.toList prNames
-          where pair hpId name = case uncons (readParen True reads (B.unpack name)) of
-                  Just ((profId, _), _) -> (profId, hpId)
-                  _ -> (-1, hpId)
+          where pair hpId name
+                  | Just ((profId, _), _) <- uncons (readParen True reads (B.unpack name)) = (profId, hpId)
+                  | Just profId <- Map.lookup (B.unpack name) profIdsByName                = (profId, hpId)
+                  | otherwise                                                              = (-1,     hpId)
 
-        (costCentresByProfId, costCentresByName) = let Just ccs = Prof.costCentresOrderBy Prof.costCentreNo prof
-                                                       centres = foldMap (\ cc -> [((Prof.costCentreNo cc, T.unpack (Prof.costCentreName cc)), toCC cc)]) ccs in
-          (IntMap.fromList (first fst <$> centres), Map.fromList (first snd <$> centres))
+        profCentres = foldMap (foldMap (\ cc -> [((Prof.costCentreNo cc, T.unpack (Prof.costCentreName cc)), toCC cc)])) (Prof.costCentresOrderBy Prof.costCentreNo prof)
+        (costCentresByProfId, costCentresByName, profIdsByName) =
+          ( IntMap.fromList (first fst <$> profCentres)
+          , Map.fromList (first snd <$> profCentres)
+          , Map.fromList (bimap snd costCentreProfId <$> profCentres))
         toCC Prof.CostCentre{..} = CostCentre costCentreNo (IntMap.lookup costCentreNo hpIdsByProfId) (T.unpack costCentreName) (Just (T.unpack costCentreModule)) (fmap T.unpack costCentreSrc)
 
-        costCentreForHpId hpId = let hpName = B.unpack $ prNames IntMap.! hpId in costCentreForHpIdAndName hpId hpName
-        costCentreForHpIdAndName hpId name = case uncons (readParen True reads name) of
-          Just ((profId, rest), _) -> fromMaybe (CostCentre profId (Just hpId) rest Nothing Nothing) (IntMap.lookup profId costCentresByProfId)
+        costCentreForHpId hpId = let hpName = B.unpack $ prNames IntMap.! hpId in costCentreForHpIdAndNameIn costCentresByProfId costCentresByName hpId hpName
+        costCentreForHpIdAndNameIn byId byName hpId name = case uncons (readParen True reads name) of
+          Just ((profId, rest), _) -> fromMaybe (CostCentre profId (Just hpId) rest Nothing Nothing) (IntMap.lookup profId byId)
           _ -> fromMaybe (CostCentre (-1) (IntMap.lookup (-1) hpIdsByProfId) name Nothing Nothing) (Map.lookup name costCentresByName)
 
         toLegend cc@CostCentre{..} =
