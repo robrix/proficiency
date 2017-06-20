@@ -56,6 +56,7 @@ renderProfile Profile{..} = H.docTypeHtml $ do
           S.g ! A.transform (S.translate 15 0) ! A.class_ (toValue "axis y") $ do
             for_ [0..graphMBs] $ \ i -> do
               S.text_ ! A.x (toValue (0 :: Int)) ! A.y (toValue (graphHeight - i * 60)) ! A.class_ (toValue "label y") $ string (show i <> "M")
+    H.script ! AH.type_ (toValue "text/javascript") $ string "run();"
 
   where toPath :: CostCentreId -> [(Int, Time, Double)] -> S.Svg
         toPath costCentreId points = S.path ! A.d (S.mkPath p) ! A.id_ (toValue ("path-" <> show costCentreId)) ! A.stroke (colour costCentreId) ! A.fill (colour costCentreId)
