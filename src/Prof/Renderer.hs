@@ -43,7 +43,7 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
       H.input ! AH.type_ "checkbox" ! AH.checked "" ! AH.id "toggle-all"
       H.input ! AH.type_ "search" ! AH.id "filter-legend"
       H.ul $ do
-        for_ (toList costCentresById) $ \ cc@CostCentre{..} -> case costCentreHpId of
+        for_ (toList costCentresByProfId) $ \ cc@CostCentre{..} -> case costCentreHpId of
           Just _ -> H.li ! A.id_ (stringValue ("legend-" <> show costCentreProfId)) ! dataAttribute "id" (toValue costCentreProfId) ! AH.style ("color: " `mappend` colour costCentreProfId) $ do
             H.label $ do
               H.input ! AH.type_ "checkbox" ! AH.checked "" ! dataAttribute "id" (toValue costCentreProfId)
@@ -114,14 +114,14 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
                   Just ((profId, _), _) -> (profId, hpId)
                   _ -> (-1, hpId)
 
-        (costCentresById, costCentresByName) = let Just ccs = Prof.costCentresOrderBy Prof.costCentreNo prof
-                                                   centres = foldMap (\ cc -> [((Prof.costCentreNo cc, T.unpack (Prof.costCentreName cc)), toCC cc)]) ccs in
+        (costCentresByProfId, costCentresByName) = let Just ccs = Prof.costCentresOrderBy Prof.costCentreNo prof
+                                                       centres = foldMap (\ cc -> [((Prof.costCentreNo cc, T.unpack (Prof.costCentreName cc)), toCC cc)]) ccs in
           (IntMap.fromList (first fst <$> centres), Map.fromList (first snd <$> centres))
         toCC Prof.CostCentre{..} = CostCentre costCentreNo (IntMap.lookup costCentreNo hpIdsByProfId) (T.unpack costCentreName) (Just (T.unpack costCentreModule)) (fmap T.unpack costCentreSrc)
 
         costCentreForHpId hpId = let hpName = B.unpack $ prNames IntMap.! hpId in costCentreForHpIdAndName hpId hpName
         costCentreForHpIdAndName hpId name = case uncons (readParen True reads name) of
-          Just ((profId, rest), _) -> fromMaybe (CostCentre profId (Just hpId) rest Nothing Nothing) (IntMap.lookup profId costCentresById)
+          Just ((profId, rest), _) -> fromMaybe (CostCentre profId (Just hpId) rest Nothing Nothing) (IntMap.lookup profId costCentresByProfId)
           _ -> fromMaybe (CostCentre (-1) (IntMap.lookup (-1) hpIdsByProfId) name Nothing Nothing) (Map.lookup name costCentresByName)
 
         toLegend cc@CostCentre{..} =
