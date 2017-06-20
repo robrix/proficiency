@@ -55,3 +55,10 @@ ul#legend li {
   margin: 0;
   padding: 0;
 }
+
+g#grid line {
+  stroke-width: 0.1;
+  stroke: black;
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
