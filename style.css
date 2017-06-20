@@ -67,6 +67,11 @@ ul#legend li {
   border-top: 1px solid rgb(225, 228, 232);
 }
 
+ul#legend li.active,
+ul#legend li:hover {
+  background-color: rgb(246, 248, 250);
+}
+
 g#grid line {
   stroke-width: 0.1;
   stroke: black;
