@@ -13,7 +13,7 @@ import Data.List.NonEmpty (nonEmpty)
 import Data.Ord
 import Data.Semigroup
 import Profiling.Heap.Read (readProfile)
-import Profiling.Heap.Types
+import qualified Profiling.Heap.Types as Hp
 import System.FilePath.Glob
 import Text.Blaze.Svg.Renderer.Utf8
 import Text.Blaze
@@ -23,8 +23,8 @@ import qualified Text.Blaze.Svg11 as S
 import qualified Text.Blaze.Svg11.Attributes as A
 
 
-renderProfile :: Profile -> S.Svg
-renderProfile Profile{..} = H.docTypeHtml $ do
+renderProfile :: Hp.Profile -> S.Svg
+renderProfile Hp.Profile{..} = H.docTypeHtml $ do
   H.head $ do
     H.title $ string (prJob <> " " <> prDate)
     H.link ! AH.rel "stylesheet" ! AH.href "style.css"
@@ -62,7 +62,7 @@ renderProfile Profile{..} = H.docTypeHtml $ do
               S.text_ ! A.x (toValue (0 :: Int)) ! A.y (toValue (graphHeight - i * 60)) ! A.class_ "label y" $ string (show i <> "M")
     H.script ! AH.type_ "text/javascript" $ string "run();"
 
-  where toPath :: CostCentreId -> [(Int, Time, Double)] -> S.Svg
+  where toPath :: Hp.CostCentreId -> [(Int, Hp.Time, Double)] -> S.Svg
         toPath costCentreId points = S.path ! A.d (S.mkPath p) ! A.id_ (toValue ("path-" <> show costCentreId)) ! dataAttribute "id" (toValue costCentreId) ! A.stroke (colour costCentreId) ! A.fill (colour costCentreId)
           where p = let (_, x, path) = foldl' step (pred 0, 0, S.m 0 0) points in path >> S.l x 0
         step (prevI, prevX, steps) (i, x, y) = (i,x,) . (steps >>) $ if prevI < pred i then do
@@ -71,14 +71,14 @@ renderProfile Profile{..} = H.docTypeHtml $ do
           S.l x y
         else
           S.l x y
-        toMap :: Int -> (Time, ProfileSample) -> Map.IntMap (Int, Time, Double)
+        toMap :: Int -> (Hp.Time, Hp.ProfileSample) -> Map.IntMap (Int, Hp.Time, Double)
         toMap i (time, samples) = Map.fromList (fmap ((i, time,) . (* (1/1024/1024)) . fromIntegral) <$> samples)
         graphSeconds = maybe (1 :: Int) (ceiling . fst . fst) (uncons prSamples)
         graphMBs = maybe (1 :: Int) (ceiling . (* (1/1024/1024)) . fromIntegral . maximum . fmap (snd . maximumBy (compare `on` snd) . snd)) (nonEmpty prSamples)
         graphWidth = graphSeconds * 60
         graphHeight = graphMBs * 60
 
-        colour :: CostCentreId -> AttributeValue
+        colour :: Hp.CostCentreId -> AttributeValue
         colour costCentreId =
           let hue = (35 * fromIntegral costCentreId) `mod'` 360
               saturation = 1
