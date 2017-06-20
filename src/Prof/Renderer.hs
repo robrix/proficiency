@@ -34,7 +34,7 @@ renderProfile Profile{..} = H.docTypeHtml $ do
     H.ul ! A.id_ (toValue "legend") $ do
       H.input ! AH.type_ (toValue "search")
       for_ (Map.toList prNames) $ \ (costCentreId, name) ->
-        H.li ! A.id_ (toValue ("legend-" <> show costCentreId)) ! AH.style (toValue "color: " `mappend` colour costCentreId) $ string (B.unpack name)
+        H.li ! A.id_ (toValue ("legend-" <> show costCentreId)) ! dataAttribute (stringTag "id") (toValue (show costCentreId)) ! AH.style (toValue "color: " `mappend` colour costCentreId) $ string (B.unpack name)
     H.div ! AH.class_ (toValue "graph") $
       S.svg
       ! S.customAttribute (S.stringTag "xmlns") (S.toValue "http://www.w3.org/2000/svg")
@@ -59,7 +59,7 @@ renderProfile Profile{..} = H.docTypeHtml $ do
     H.script ! AH.type_ (toValue "text/javascript") $ string "run();"
 
   where toPath :: CostCentreId -> [(Int, Time, Double)] -> S.Svg
-        toPath costCentreId points = S.path ! A.d (S.mkPath p) ! A.id_ (toValue ("path-" <> show costCentreId)) ! A.stroke (colour costCentreId) ! A.fill (colour costCentreId)
+        toPath costCentreId points = S.path ! A.d (S.mkPath p) ! A.id_ (toValue ("path-" <> show costCentreId)) ! dataAttribute (stringTag "id") (toValue (show costCentreId)) ! A.stroke (colour costCentreId) ! A.fill (colour costCentreId)
           where p = let (_, x, path) = foldl' step (pred 0, 0, S.m 0 0) points in path >> S.l x 0
         step (prevI, prevX, steps) (i, x, y) = (i,x,) . (steps >>) $ if prevI < pred i then do
           S.l x 0

@@ -15,12 +15,12 @@ var Hover = function (element, target) {
 
 function run() {
   for (let li of document.querySelectorAll("#legend li")) {
-    let costCentreId = li.id.match(/^legend-(\d+)$/)[1];
+    let costCentreId = li.getAttribute("data-id");
     let path = document.querySelector("#path-" + costCentreId);
     li.hover = new Hover(li, path);
   }
   for (let path of document.querySelectorAll("#graph path")) {
-    let costCentreId = path.id.match(/^path-(\d+)$/)[1];
+    let costCentreId = path.getAttribute("data-id");
     let li = document.querySelector("#legend-" + costCentreId);
     path.hover = new Hover(path, li);
   }
