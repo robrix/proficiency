@@ -25,7 +25,8 @@ path {
   fill-opacity: 0.5;
 }
 
-path.active {
+path.active,
+path:hover {
   stroke-width: 1.0;
   fill-opacity: 1.0;
 }
