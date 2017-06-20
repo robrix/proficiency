@@ -80,8 +80,8 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
           S.l x y
         else
           S.l x y
-        costCentreHpMap = let merged = IntMap.unionsWith (<>) (fmap pure <$> zipWith toMap [0..] (reverse prSamples)) in
-          IntMap.mapWithKey (\ hpId samples -> (costCentreForHpId hpId, samples)) merged
+        hpSamplesMap = IntMap.unionsWith (<>) (fmap pure <$> zipWith toMap [0..] (reverse prSamples))
+        costCentreHpMap = IntMap.mapWithKey (\ hpId samples -> (costCentreForHpId hpId, samples)) hpSamplesMap
         toMap :: Int -> (Hp.Time, Hp.ProfileSample) -> IntMap.IntMap (Int, Hp.Time, Double)
         toMap i (time, samples) = IntMap.fromList (fmap ((i, time,) . (* (1/1024/1024)) . fromIntegral) <$> samples)
         graphSeconds = maybe (1 :: Int) (ceiling . fst . fst) (uncons prSamples)
@@ -108,15 +108,20 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
 
         inRange x (l, u) = l <= x && x <= u
 
+        hpIdsByProfId = IntMap.fromList $ uncurry pair <$> IntMap.toList prNames
+          where pair hpId name = case uncons (readParen True reads (B.unpack name)) of
+                  Just ((profId, _), _) -> (profId, hpId)
+                  _ -> (-1, hpId)
+
         (costCentresById, costCentresByName) = let Just ccs = Prof.costCentresOrderBy Prof.costCentreNo prof
                                                    centres = foldMap (\ cc -> [((Prof.costCentreNo cc, T.unpack (Prof.costCentreName cc)), toCC cc)]) ccs in
           (IntMap.fromList (first fst <$> centres), Map.fromList (first snd <$> centres))
-        toCC Prof.CostCentre{..} = CostCentre costCentreNo (T.unpack costCentreName) (Just (T.unpack costCentreModule)) (fmap T.unpack costCentreSrc)
+        toCC Prof.CostCentre{..} = CostCentre costCentreNo (IntMap.lookup costCentreNo hpIdsByProfId) (T.unpack costCentreName) (Just (T.unpack costCentreModule)) (fmap T.unpack costCentreSrc)
 
         costCentreForHpId hpId = let hpName = B.unpack $ prNames IntMap.! hpId in costCentreForHpIdAndName hpId hpName
         costCentreForHpIdAndName hpId name = case uncons (readParen True reads name) of
-          Just ((profId, rest), _) -> fromMaybe (CostCentre profId rest Nothing Nothing) (IntMap.lookup profId costCentresById)
-          _ -> fromMaybe (CostCentre (-1) name Nothing Nothing) (Map.lookup name costCentresByName)
+          Just ((profId, rest), _) -> fromMaybe (CostCentre profId (Just hpId) rest Nothing Nothing) (IntMap.lookup profId costCentresById)
+          _ -> fromMaybe (CostCentre (-1) (IntMap.lookup (-1) hpIdsByProfId) name Nothing Nothing) (Map.lookup name costCentresByName)
 
         toLegend cc@CostCentre{..} =
           case costCentreSource of
@@ -126,6 +131,7 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
 
 data CostCentre = CostCentre
   { costCentreProfId :: Int
+  , costCentreHpId :: Maybe Int
   , costCentreName :: String
   , costCentreModuleName :: Maybe String
   , costCentreSource :: Maybe String
