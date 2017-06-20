@@ -39,11 +39,11 @@ renderProfile Profile{..} = H.docTypeHtml $ do
       ! S.customAttribute (S.stringTag "xmlns:xlink") (S.toValue "http://www.w3.org/1999/xlink")
       ! A.width (toValue graphWidth)
       ! A.height (toValue graphHeight) $ do
-        S.g ! A.transform (S.translate 0 graphHeight `mappend` S.scale 60 (-60/1024/1024)) $ do
+        S.g ! A.transform (S.translate 0 graphHeight `mappend` S.scale 60 (-60)) $ do
           S.g ! A.id_ (toValue "overlaid") $ do
             foldr (>>) (pure ()) $ Map.mapWithKey toPath . Map.unionsWith (<>) . fmap (fmap pure) $ zipWith toMap [0..] (reverse prSamples)
           S.g ! A.id_ (toValue "grid") $ do
-            for_ [0..pred graphSeconds] $ \ i -> S.line ! A.x1 (toValue i) ! A.x2 (toValue i) ! A.y1 (toValue (0 :: Int)) ! A.y2 (toValue (graphMBs * 1*1024*1024))
+            for_ [0..pred graphSeconds] $ \ i -> S.line ! A.x1 (toValue i) ! A.x2 (toValue i) ! A.y1 (toValue (0 :: Int)) ! A.y2 (toValue graphMBs)
   where toPath :: CostCentreId -> [(Int, Time, Double)] -> S.Svg
         toPath costCentreId points = S.path ! A.d (S.mkPath (snd (foldl' step (pred 0, S.m 0 0) points))) ! A.id_ (S.toValue costCentreId) ! A.stroke (colour costCentreId 1) ! A.fill (colour costCentreId 0.5)
         step (prevI, steps) (i, x, y) = (,) i . (steps >>) $ if prevI < pred i then do
@@ -52,7 +52,7 @@ renderProfile Profile{..} = H.docTypeHtml $ do
         else
           S.l x y
         toMap :: Int -> (Time, ProfileSample) -> Map.IntMap (Int, Time, Double)
-        toMap i (time, samples) = Map.fromList (fmap ((i, time,) . fromIntegral) <$> samples)
+        toMap i (time, samples) = Map.fromList (fmap ((i, time,) . (* (1/1024/1024)) . fromIntegral) <$> samples)
         graphSeconds = maybe (1 :: Int) (ceiling . fst . fst) (uncons prSamples)
         graphMBs = maybe (1 :: Int) (ceiling . (* (1/1024/1024)) . fromIntegral . maximum . fmap (snd . maximumBy (compare `on` snd) . snd)) (nonEmpty prSamples)
         graphWidth = graphSeconds * 60
