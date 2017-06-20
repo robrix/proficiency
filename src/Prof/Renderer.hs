@@ -35,13 +35,14 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
   H.body $ do
     H.pre $ do
       H.code $ string (dropWhile isSpace prJob)
-    H.ul ! A.id_ "legend" $ do
+    H.aside ! A.id_ "legend" $ do
       H.input ! AH.type_ "search"
-      for_ (Map.toList prNames) $ \ (hpId, name) ->
-        H.li ! A.id_ (stringValue ("legend-" <> show hpId)) ! dataAttribute "id" (toValue hpId) ! AH.style ("color: " `mappend` colour hpId) $ do
-          H.label $ do
-            H.input ! AH.type_ "checkbox" ! AH.checked "" ! dataAttribute "id" (toValue hpId)
-            toLegend hpId (B.unpack name)
+      H.ul $ do
+        for_ (Map.toList prNames) $ \ (hpId, name) ->
+          H.li ! A.id_ (stringValue ("legend-" <> show hpId)) ! dataAttribute "id" (toValue hpId) ! AH.style ("color: " `mappend` colour hpId) $ do
+            H.label $ do
+              H.input ! AH.type_ "checkbox" ! AH.checked "" ! dataAttribute "id" (toValue hpId)
+              toLegend hpId (B.unpack name)
     H.div ! AH.class_ "graph" $
       S.svg
       ! S.customAttribute "xmlns" "http://www.w3.org/2000/svg"
