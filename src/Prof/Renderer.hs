@@ -117,8 +117,10 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
 
         profCentres = foldMap (foldMap (\ cc -> [((Prof.costCentreNo cc, T.unpack (Prof.costCentreName cc)), toCC cc)])) (Prof.costCentresOrderBy Prof.costCentreNo prof)
         (costCentresByProfId, costCentresByName, profIdsByName) =
-          ( IntMap.fromList (first fst <$> profCentres)
-          , Map.fromList (first snd <$> profCentres)
+          let profCCsByProfId = IntMap.fromList (first fst <$> profCentres)
+              profCCsByProfName = Map.fromList (first snd <$> profCentres) in
+          ( profCCsByProfId `IntMap.union` IntMap.fromList (fmap (\ (hpId, hpName) -> let cc = costCentreForHpIdAndNameIn profCCsByProfId profCCsByProfName hpId (B.unpack hpName) in (costCentreProfId cc, cc)) (IntMap.toList prNames))
+          , profCCsByProfName
           , Map.fromList (bimap snd costCentreProfId <$> profCentres))
         toCC Prof.CostCentre{..} = CostCentre costCentreNo (IntMap.lookup costCentreNo hpIdsByProfId) (T.unpack costCentreName) (Just (T.unpack costCentreModule)) (fmap T.unpack costCentreSrc)
 
