@@ -7,10 +7,15 @@ var Hover = function (element, target) {
     case 'mouseout':
       target.classList.remove("active");
       break;
+    case 'click':
+      target.scrollIntoView();
+      console.log("hello");
+      break;
     }
   };
   element.addEventListener('mouseover', this);
   element.addEventListener('mouseout', this);
+  element.addEventListener('click', this);
 };
 
 function run() {
