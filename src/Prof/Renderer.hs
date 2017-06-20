@@ -36,6 +36,7 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
     H.pre $ do
       H.code $ string (dropWhile isSpace prJob)
     H.aside ! A.id_ "legend" $ do
+      H.input ! AH.type_ "checkbox" ! AH.checked "" ! AH.id "toggle-all"
       H.input ! AH.type_ "search"
       H.ul $ do
         for_ (Map.toList prNames) $ \ (hpId, name) ->
