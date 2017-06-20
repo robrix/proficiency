@@ -44,7 +44,11 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
       H.input ! AH.type_ "search" ! AH.id "filter-legend"
       H.ul $ do
         for_ (toList costCentresByProfId) $ \ cc@CostCentre{..} -> case costCentreHpId of
-          Just _ -> H.li ! A.id_ (stringValue ("legend-" <> show costCentreProfId)) ! dataAttribute "id" (toValue costCentreProfId) ! AH.style ("color: " `mappend` colour costCentreProfId) $ do
+          Just _ -> H.li
+            ! A.id_ (stringValue ("legend-" <> show costCentreProfId))
+            ! dataAttribute "id" (toValue costCentreProfId)
+            ! dataAttribute "name" (toValue (formattedName cc))
+            ! AH.style ("color: " `mappend` colour costCentreProfId) $ do
             H.label $ do
               H.input ! AH.type_ "checkbox" ! AH.checked "" ! dataAttribute "id" (toValue costCentreProfId)
               case costCentreSource of
