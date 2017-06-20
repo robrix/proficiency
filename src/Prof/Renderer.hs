@@ -14,6 +14,7 @@ import Data.Ord
 import Data.Semigroup
 import Profiling.Heap.Read (readProfile)
 import Profiling.Heap.Types
+import System.FilePath.Glob
 import Text.Blaze.Svg.Renderer.Utf8
 import Text.Blaze
 import qualified Text.Blaze.XHtml5 as H
@@ -98,8 +99,9 @@ renderProfile Profile{..} = H.docTypeHtml $ do
 
 
 printRendering :: FilePath -> FilePath -> IO ()
-printRendering inputPath outputPath = do
-  profile <- readProfile inputPath
+printRendering profilePath outputPath = do
+  ([[hpPath], [profPath]], _) <- globDir [compile "*.hp", compile "*.prof"] profilePath
+  profile <- readProfile hpPath
   case renderSvg . renderProfile <$> profile of
     Just svg -> B.writeFile outputPath svg
     _ -> error "Could not read profile."

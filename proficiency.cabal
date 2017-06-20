@@ -24,6 +24,7 @@ library
                      , containers
                      , ghc-events-parallel
                      , ghc-prof
+                     , Glob
                      , hp2any-core
   default-language:    Haskell2010
 
