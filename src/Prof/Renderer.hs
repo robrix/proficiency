@@ -41,7 +41,7 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
         H.li ! A.id_ (stringValue ("legend-" <> show hpId)) ! dataAttribute "id" (toValue hpId) ! AH.style ("color: " `mappend` colour hpId) $ do
           H.label $ do
             H.input ! AH.type_ "checkbox" ! AH.checked "" ! dataAttribute "id" (toValue hpId)
-            string $ toLegend hpId (B.unpack name)
+            toLegend hpId (B.unpack name)
     H.div ! AH.class_ "graph" $
       S.svg
       ! S.customAttribute "xmlns" "http://www.w3.org/2000/svg"
@@ -106,10 +106,12 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
         toLegend hpId name
           | matched <- readParen True reads name :: [(Int, String)]
           , (costCentreId, _) : _ <- matched
-          , Just cc <- Map.lookup costCentreId costCentresById
-          = costCentreName cc
+          , Just CostCentre{..} <- Map.lookup costCentreId costCentresById
+          = case costCentreSource of
+            Just source -> H.a ! AH.title (toValue source) $ string $ costCentreModuleName <> "." <> costCentreName
+            _ -> string $ costCentreModuleName <> "." <> costCentreName
           | otherwise
-          = name
+          = string name
 
 data CostCentre = CostCentre
   { costCentreId :: Int

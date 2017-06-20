@@ -95,3 +95,8 @@ text.label.y {
   alignment-baseline: middle;
   text-anchor: end;
 }
+
+ul#legend li :link,
+ul#legend li :visited {
+  color: inherit;
+}
