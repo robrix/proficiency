@@ -117,7 +117,7 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
           = string name
 
 data CostCentre = CostCentre
-  { costCentreId :: Int
+  { costCentreProfId :: Int
   , costCentreName :: String
   , costCentreModuleName :: String
   , costCentreSource :: Maybe String
