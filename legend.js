@@ -41,9 +41,17 @@ function run() {
     path.hover = new Hover(path, li);
   }
 
-  for (let input of document.querySelectorAll("#legend li input")) {
+  let checkboxes = document.querySelectorAll("#legend li input");
+  for (let input of checkboxes) {
     let costCentreId = input.getAttribute("data-id");
     let path = document.querySelector("#path-" + costCentreId);
     input.toggle = new Toggle(input, path);
   }
+
+  let toggleAll = document.querySelector("#toggle-all");
+  toggleAll.addEventListener('change', event => checkboxes.forEach(checkbox => {
+    checkbox.checked = toggleAll.checked;
+    var event = new Event('change');
+    checkbox.dispatchEvent(event);
+  }));
 }
