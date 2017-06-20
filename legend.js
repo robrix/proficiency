@@ -1,12 +1,11 @@
-var Hover = function (element) {
+var Hover = function (element, target) {
   this.handleEvent = event => {
-    let costCentreId = element.id.match(/^legend-(\d+)$/)[1];
     switch (event.type) {
     case 'mouseover':
-      document.querySelector("#path-" + costCentreId).classList.add("active");
+      target.classList.add("active");
       break;
     case 'mouseout':
-      document.querySelector("#path-" + costCentreId).classList.remove("active");
+      target.classList.remove("active");
       break;
     }
   };
@@ -16,6 +15,13 @@ var Hover = function (element) {
 
 function run() {
   for (let li of document.querySelectorAll("#legend li")) {
-    li.hover = new Hover(li);
+    let costCentreId = li.id.match(/^legend-(\d+)$/)[1];
+    let path = document.querySelector("#path-" + costCentreId);
+    li.hover = new Hover(li, path);
+  }
+  for (let path of document.querySelectorAll("#graph path")) {
+    let costCentreId = path.id.match(/^path-(\d+)$/)[1];
+    let li = document.querySelector("#legend-" + costCentreId);
+    path.hover = new Hover(path, li);
   }
 }
