@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards, TupleSections #-}
+{-# LANGUAGE OverloadedStrings, RecordWildCards, TupleSections #-}
 module Prof.Renderer where
 
 import qualified Data.ByteString.Lazy as B hiding (unpack)
@@ -26,40 +26,40 @@ renderProfile :: Profile -> S.Svg
 renderProfile Profile{..} = H.docTypeHtml $ do
   H.head $ do
     H.title $ string (prJob <> " " <> prDate)
-    H.link ! AH.rel (toValue "stylesheet") ! AH.href (toValue "style.css")
-    H.script ! AH.type_ (toValue "text/javascript") ! AH.src (toValue "legend.js") $ pure ()
+    H.link ! AH.rel "stylesheet" ! AH.href "style.css"
+    H.script ! AH.type_ "text/javascript" ! AH.src "legend.js" $ pure ()
   H.body $ do
     H.pre $ do
       H.code $ string (dropWhile isSpace prJob)
-    H.ul ! A.id_ (toValue "legend") $ do
-      H.input ! AH.type_ (toValue "search")
+    H.ul ! A.id_ "legend" $ do
+      H.input ! AH.type_ "search"
       for_ (Map.toList prNames) $ \ (costCentreId, name) ->
-        H.li ! A.id_ (toValue ("legend-" <> show costCentreId)) ! dataAttribute (stringTag "id") (toValue (show costCentreId)) ! AH.style (toValue "color: " `mappend` colour costCentreId) $ string (B.unpack name)
-    H.div ! AH.class_ (toValue "graph") $
+        H.li ! A.id_ (stringValue ("legend-" <> show costCentreId)) ! dataAttribute "id" (toValue costCentreId) ! AH.style ("color: " `mappend` colour costCentreId) $ string (B.unpack name)
+    H.div ! AH.class_ "graph" $
       S.svg
-      ! S.customAttribute (S.stringTag "xmlns") (S.toValue "http://www.w3.org/2000/svg")
-      ! S.customAttribute (S.stringTag "xmlns:xlink") (S.toValue "http://www.w3.org/1999/xlink")
+      ! S.customAttribute "xmlns" "http://www.w3.org/2000/svg"
+      ! S.customAttribute "xmlns:xlink" "http://www.w3.org/1999/xlink"
       ! A.width (toValue (graphWidth + 40))
       ! A.height (toValue (graphHeight + 20)) $ do
         S.g ! A.transform (S.translate 5 (5 :: Int)) $ do
-          S.g ! A.id_ (toValue "graph") ! A.transform (S.translate 20 graphHeight `mappend` S.scale 60 (-60)) $ do
-            S.g ! A.id_ (toValue "overlaid") $ do
+          S.g ! A.id_ "graph" ! A.transform (S.translate 20 graphHeight `mappend` S.scale 60 (-60)) $ do
+            S.g ! A.id_ "overlaid" $ do
               foldr (>>) (pure ()) $ Map.mapWithKey toPath . Map.unionsWith (<>) . fmap (fmap pure) $ zipWith toMap [0..] (reverse prSamples)
-            S.g ! A.id_ (toValue "grid") $ do
+            S.g ! A.id_ "grid" $ do
               for_ [0..graphSeconds] $ \ i -> do
                 S.line ! A.x1 (toValue i) ! A.x2 (toValue i) ! A.y1 (toValue (0 :: Int)) ! A.y2 (toValue graphMBs)
               for_ [0..graphMBs] $ \ i -> do
                 S.line ! A.x1 (toValue (0 :: Int)) ! A.x2 (toValue graphSeconds) ! A.y1 (toValue i) ! A.y2 (toValue i)
-          S.g ! A.transform (S.translate 20 (graphHeight + 5)) ! A.class_ (toValue "axis x") $ do
+          S.g ! A.transform (S.translate 20 (graphHeight + 5)) ! A.class_ "axis x" $ do
             for_ [0..graphSeconds] $ \ i -> do
-              S.text_ ! A.x (toValue (i * 60)) ! A.y (toValue (0 :: Int)) ! A.class_ (toValue "label x") $ string (show i <> "s")
-          S.g ! A.transform (S.translate 15 0) ! A.class_ (toValue "axis y") $ do
+              S.text_ ! A.x (toValue (i * 60)) ! A.y (toValue (0 :: Int)) ! A.class_ "label x" $ string (show i <> "s")
+          S.g ! A.transform (S.translate 15 0) ! A.class_ "axis y" $ do
             for_ [0..graphMBs] $ \ i -> do
-              S.text_ ! A.x (toValue (0 :: Int)) ! A.y (toValue (graphHeight - i * 60)) ! A.class_ (toValue "label y") $ string (show i <> "M")
-    H.script ! AH.type_ (toValue "text/javascript") $ string "run();"
+              S.text_ ! A.x (toValue (0 :: Int)) ! A.y (toValue (graphHeight - i * 60)) ! A.class_ "label y" $ string (show i <> "M")
+    H.script ! AH.type_ "text/javascript" $ string "run();"
 
   where toPath :: CostCentreId -> [(Int, Time, Double)] -> S.Svg
-        toPath costCentreId points = S.path ! A.d (S.mkPath p) ! A.id_ (toValue ("path-" <> show costCentreId)) ! dataAttribute (stringTag "id") (toValue (show costCentreId)) ! A.stroke (colour costCentreId) ! A.fill (colour costCentreId)
+        toPath costCentreId points = S.path ! A.d (S.mkPath p) ! A.id_ (toValue ("path-" <> show costCentreId)) ! dataAttribute "id" (toValue costCentreId) ! A.stroke (colour costCentreId) ! A.fill (colour costCentreId)
           where p = let (_, x, path) = foldl' step (pred 0, 0, S.m 0 0) points in path >> S.l x 0
         step (prevI, prevX, steps) (i, x, y) = (i,x,) . (steps >>) $ if prevI < pred i then do
           S.l x 0
