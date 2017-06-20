@@ -77,8 +77,8 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
         else
           S.l x y
         costCentreHpMap = let merged = Map.unionsWith (<>) (fmap pure <$> zipWith toMap [0..] (reverse prSamples)) in
-          Map.mapWithKey findCostCentre merged
-        findCostCentre hpId samples = let hpName = prNames Map.! hpId in (parseHpName (B.unpack hpName), samples)
+          Map.mapWithKey (\ hpId samples -> (costCentreForHpId hpId, samples)) merged
+        costCentreForHpId hpId = let hpName = B.unpack $ prNames Map.! hpId in parseHpName hpName
         toMap :: Int -> (Hp.Time, Hp.ProfileSample) -> Map.IntMap (Int, Hp.Time, Double)
         toMap i (time, samples) = Map.fromList (fmap ((i, time,) . (* (1/1024/1024)) . fromIntegral) <$> samples)
         graphSeconds = maybe (1 :: Int) (ceiling . fst . fst) (uncons prSamples)
