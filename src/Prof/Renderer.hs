@@ -103,12 +103,13 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
         costCentresById = Map.fromList $ let Just ccs = Prof.costCentresOrderBy Prof.costCentreNo prof in foldMap (\ cc -> [(Prof.costCentreNo cc, toCC cc)]) ccs
         toCC Prof.CostCentre{..} = CostCentre costCentreNo (T.unpack costCentreName) (T.unpack costCentreModule) (fmap T.unpack costCentreSrc)
 
-        toLegend hpId name =
-          let matched = readParen True reads name :: [(Int, String)]
-              costCentreId = case matched of
-                ((costCentreId, _) : _) -> costCentreId
-                _ -> hpId
-          in maybe name costCentreName (Map.lookup costCentreId costCentresById)
+        toLegend hpId name
+          | matched <- readParen True reads name :: [(Int, String)]
+          , (costCentreId, _) : _ <- matched
+          , Just cc <- Map.lookup costCentreId costCentresById
+          = costCentreName cc
+          | otherwise
+          = name
 
 data CostCentre = CostCentre
   { costCentreId :: Int
