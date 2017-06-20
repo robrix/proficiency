@@ -17,7 +17,6 @@ svg {
 text {
   font-family: Helvetica;
   font-size: 12px;
-  dominant-baseline: hanging;
 }
 
 path {
@@ -63,9 +62,14 @@ g#grid line {
   vector-effect: non-scaling-stroke;
 }
 
-text.label.x {
+text.label {
   font-size: 9px;
+}
+text.label.x {
   dominant-baseline: hanging;
-  alignment-baseline: hanging;
   text-anchor: middle;
+}
+text.label.y {
+  alignment-baseline: middle;
+  text-anchor: end;
 }
