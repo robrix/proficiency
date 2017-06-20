@@ -43,13 +43,13 @@ renderProfile Profile{..} = H.docTypeHtml $ do
       ! A.height (toValue (graphHeight + 20)) $ do
         S.g ! A.transform (S.translate 5 (5 :: Int)) $ do
           S.g ! A.id_ (toValue "graph") ! A.transform (S.translate 20 graphHeight `mappend` S.scale 60 (-60)) $ do
+            S.g ! A.id_ (toValue "overlaid") $ do
+              foldr (>>) (pure ()) $ Map.mapWithKey toPath . Map.unionsWith (<>) . fmap (fmap pure) $ zipWith toMap [0..] (reverse prSamples)
             S.g ! A.id_ (toValue "grid") $ do
               for_ [0..graphSeconds] $ \ i -> do
                 S.line ! A.x1 (toValue i) ! A.x2 (toValue i) ! A.y1 (toValue (0 :: Int)) ! A.y2 (toValue graphMBs)
               for_ [0..graphMBs] $ \ i -> do
                 S.line ! A.x1 (toValue (0 :: Int)) ! A.x2 (toValue graphSeconds) ! A.y1 (toValue i) ! A.y2 (toValue i)
-            S.g ! A.id_ (toValue "overlaid") $ do
-              foldr (>>) (pure ()) $ Map.mapWithKey toPath . Map.unionsWith (<>) . fmap (fmap pure) $ zipWith toMap [0..] (reverse prSamples)
           S.g ! A.transform (S.translate 20 (graphHeight + 5)) ! A.class_ (toValue "axis x") $ do
             for_ [0..graphSeconds] $ \ i -> do
               S.text_ ! A.x (toValue (i * 60)) ! A.y (toValue (0 :: Int)) ! A.class_ (toValue "label x") $ string (show i <> "s")
