@@ -37,11 +37,11 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
       H.code $ string (dropWhile isSpace prJob)
     H.ul ! A.id_ "legend" $ do
       H.input ! AH.type_ "search"
-      for_ (Map.toList prNames) $ \ (costCentreId, name) ->
-        H.li ! A.id_ (stringValue ("legend-" <> show costCentreId)) ! dataAttribute "id" (toValue costCentreId) ! AH.style ("color: " `mappend` colour costCentreId) $ do
+      for_ (Map.toList prNames) $ \ (hpId, name) ->
+        H.li ! A.id_ (stringValue ("legend-" <> show hpId)) ! dataAttribute "id" (toValue hpId) ! AH.style ("color: " `mappend` colour hpId) $ do
           H.label $ do
-            H.input ! AH.type_ "checkbox" ! AH.checked "" ! dataAttribute "id" (toValue costCentreId)
-            string (B.unpack name)
+            H.input ! AH.type_ "checkbox" ! AH.checked "" ! dataAttribute "id" (toValue hpId)
+            string $ toLegend hpId (B.unpack name)
     H.div ! AH.class_ "graph" $
       S.svg
       ! S.customAttribute "xmlns" "http://www.w3.org/2000/svg"
@@ -102,6 +102,13 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
 
         costCentresById = Map.fromList $ let Just ccs = Prof.costCentresOrderBy Prof.costCentreNo prof in foldMap (\ cc -> [(Prof.costCentreNo cc, toCC cc)]) ccs
         toCC Prof.CostCentre{..} = CostCentre costCentreNo (T.unpack costCentreName) (T.unpack costCentreModule) (fmap T.unpack costCentreSrc)
+
+        toLegend hpId name =
+          let matched = readParen True reads name :: [(Int, String)]
+              costCentreId = case matched of
+                ((costCentreId, _) : _) -> costCentreId
+                _ -> hpId
+          in maybe name costCentreName (Map.lookup costCentreId costCentresById)
 
 data CostCentre = CostCentre
   { costCentreId :: Int
