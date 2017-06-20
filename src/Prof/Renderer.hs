@@ -27,6 +27,7 @@ renderProfile Profile{..} = H.docTypeHtml $ do
   H.head $ do
     H.title $ string (prJob <> " " <> prDate)
     H.link ! AH.rel (toValue "stylesheet") ! AH.href (toValue "style.css")
+    H.script ! AH.type_ (toValue "text/javascript") ! AH.src (toValue "legend.js") $ pure ()
   H.body $ do
     H.pre $ do
       H.code $ string (dropWhile isSpace prJob)
