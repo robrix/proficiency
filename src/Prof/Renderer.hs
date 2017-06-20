@@ -49,8 +49,8 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
       ! S.customAttribute "xmlns:xlink" "http://www.w3.org/1999/xlink"
       ! A.width (toValue (graphWidth + 40))
       ! A.height (toValue (graphHeight + 20)) $ do
-        S.g ! A.transform (S.translate 5 (5 :: Int)) $ do
-          S.g ! A.id_ "graph" ! A.transform (S.translate 20 graphHeight `mappend` S.scale 60 (-60)) $ do
+        S.g ! A.transform (S.translate 25 (5 :: Int)) $ do
+          S.g ! A.id_ "graph" ! A.transform (S.translate 0 graphHeight `mappend` S.scale 60 (-60)) $ do
             S.g ! A.id_ "overlaid" $ do
               foldr (>>) (pure ()) $ Map.mapWithKey toPath . Map.unionsWith (<>) . fmap (fmap pure) $ zipWith toMap [0..] (reverse prSamples)
             S.g ! A.id_ "grid" $ do
@@ -58,12 +58,12 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
                 S.line ! A.x1 (toValue i) ! A.x2 (toValue i) ! A.y1 (toValue (0 :: Int)) ! A.y2 (toValue graphMBs)
               for_ [0..graphMBs] $ \ i -> do
                 S.line ! A.x1 (toValue (0 :: Int)) ! A.x2 (toValue graphSeconds) ! A.y1 (toValue i) ! A.y2 (toValue i)
-          S.g ! A.transform (S.translate 20 (graphHeight + 5)) ! A.class_ "axis x" $ do
+          S.g ! A.transform (S.translate 0 (graphHeight + 5)) ! A.class_ "axis x" $ do
             for_ [0..graphSeconds] $ \ i -> do
               S.text_ ! A.x (toValue (i * 60)) ! A.y (toValue (0 :: Int)) ! A.class_ "label x" $ string (show i <> "s")
-          S.g ! A.transform (S.translate 15 0) ! A.class_ "axis y" $ do
+          S.g ! A.class_ "axis y" $ do
             for_ [0..graphMBs] $ \ i -> do
-              S.text_ ! A.x (toValue (0 :: Int)) ! A.y (toValue (graphHeight - i * 60)) ! A.class_ "label y" $ string (show i <> "M")
+              S.text_ ! A.x (toValue ((-5) :: Int)) ! A.y (toValue (graphHeight - i * 60)) ! A.class_ "label y" $ string (show i <> "M")
     H.script ! AH.type_ "text/javascript" $ string "run();"
 
   where toPath :: Hp.CostCentreId -> [(Int, Hp.Time, Double)] -> S.Svg
