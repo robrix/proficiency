@@ -12,6 +12,7 @@ import Data.List as List
 import Data.List.NonEmpty (nonEmpty)
 import Data.Ord
 import Data.Semigroup
+import qualified Data.Text as T
 import qualified Data.Text.Lazy.IO as T
 import qualified GHC.Prof as Prof
 import Profiling.Heap.Read (readProfile)
@@ -26,7 +27,7 @@ import qualified Text.Blaze.Svg11.Attributes as A
 
 
 renderProfile :: Hp.Profile -> Prof.Profile -> S.Svg
-renderProfile Hp.Profile{..} _ = H.docTypeHtml $ do
+renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
   H.head $ do
     H.title $ string (prJob <> " " <> prDate)
     H.link ! AH.rel "stylesheet" ! AH.href "style.css"
@@ -99,6 +100,15 @@ renderProfile Hp.Profile{..} _ = H.docTypeHtml $ do
 
         inRange x (l, u) = l <= x && x <= u
 
+        costCentresById = Map.fromList $ let Just ccs = Prof.costCentresOrderBy Prof.costCentreNo prof in foldMap (\ cc -> [(Prof.costCentreNo cc, toCC cc)]) ccs
+        toCC Prof.CostCentre{..} = CostCentre costCentreNo (T.unpack costCentreName) (T.unpack costCentreModule) (fmap T.unpack costCentreSrc)
+
+data CostCentre = CostCentre
+  { costCentreId :: Int
+  , costCentreName :: String
+  , costCentreModuleName :: String
+  , costCentreSource :: Maybe String
+  }
 
 printRendering :: FilePath -> FilePath -> IO ()
 printRendering profilePath outputPath = do
