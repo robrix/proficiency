@@ -33,19 +33,19 @@ function run() {
   for (let li of document.querySelectorAll("#legend li")) {
     let costCentreId = li.getAttribute("data-id");
     let path = document.querySelector("#path-" + costCentreId);
-    li.hover = new Hover(li, path);
+    if (path) { li.hover = new Hover(li, path); }
   }
   for (let path of document.querySelectorAll("#graph path")) {
     let costCentreId = path.getAttribute("data-id");
     let li = document.querySelector("#legend-" + costCentreId);
-    path.hover = new Hover(path, li);
+    if (li) { path.hover = new Hover(path, li); }
   }
 
   let checkboxes = document.querySelectorAll("#legend li input");
   for (let input of checkboxes) {
     let costCentreId = input.getAttribute("data-id");
     let path = document.querySelector("#path-" + costCentreId);
-    input.toggle = new Toggle(input, path);
+    if (path) { input.toggle = new Toggle(input, path); }
   }
 
   let toggleAll = document.querySelector("#toggle-all");
@@ -54,4 +54,9 @@ function run() {
     var event = new Event('change');
     checkbox.dispatchEvent(event);
   }));
+
+  let filterLegend = document.querySelector("#filter-legend");
+  filterLegend.addEventListener('change', event => {
+    ;
+  });
 }

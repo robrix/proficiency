@@ -7,7 +7,7 @@ import qualified Data.ByteString.Lazy as B hiding (unpack)
 import qualified Data.ByteString.Char8 as B (unpack)
 import Data.Char
 import Data.Fixed
-import Data.Foldable (foldl', for_)
+import Data.Foldable (foldl', for_, toList)
 import Data.Function
 import qualified Data.IntMap as IntMap
 import Data.List as List
@@ -41,13 +41,13 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
       H.code $ string (dropWhile isSpace prJob)
     H.aside ! A.id_ "legend" $ do
       H.input ! AH.type_ "checkbox" ! AH.checked "" ! AH.id "toggle-all"
-      H.input ! AH.type_ "search"
+      H.input ! AH.type_ "search" ! AH.id "filter-legend"
       H.ul $ do
-        for_ (IntMap.toList prNames) $ \ (hpId, name) ->
-          H.li ! A.id_ (stringValue ("legend-" <> show hpId)) ! dataAttribute "id" (toValue hpId) ! AH.style ("color: " `mappend` colour hpId) $ do
+        for_ (toList costCentresById) $ \ cc@CostCentre{..} ->
+          H.li ! A.id_ (stringValue ("legend-" <> show costCentreProfId)) ! dataAttribute "id" (toValue costCentreProfId) ! AH.style ("color: " `mappend` colour costCentreProfId) $ do
             H.label $ do
-              H.input ! AH.type_ "checkbox" ! AH.checked "" ! dataAttribute "id" (toValue hpId)
-              toLegend hpId (B.unpack name)
+              H.input ! AH.type_ "checkbox" ! AH.checked "" ! dataAttribute "id" (toValue costCentreProfId)
+              toLegend cc
     H.div ! AH.class_ "graph" $
       S.svg
       ! S.customAttribute "xmlns" "http://www.w3.org/2000/svg"
@@ -72,7 +72,7 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
     H.script ! AH.type_ "text/javascript" $ string "run();"
 
   where toPath :: Hp.CostCentreId -> (CostCentre, [(Int, Hp.Time, Double)]) -> S.Svg
-        toPath hpId (_, points) = S.path ! A.d (S.mkPath p) ! A.id_ (toValue ("path-" <> show hpId)) ! dataAttribute "id" (toValue hpId) ! A.stroke (colour hpId) ! A.fill (colour hpId)
+        toPath hpId (CostCentre{..}, points) = S.path ! A.d (S.mkPath p) ! A.id_ (toValue ("path-" <> show costCentreProfId)) ! dataAttribute "id" (toValue costCentreProfId) ! A.stroke (colour costCentreProfId) ! A.fill (colour costCentreProfId)
           where p = let (_, x, path) = foldl' step (pred 0, 0, S.m 0 0) points in path >> S.l x 0
         step (prevI, prevX, steps) (i, x, y) = (i,x,) . (steps >>) $ if prevI < pred i then do
           S.l x 0
@@ -110,7 +110,7 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
 
         (costCentresById, costCentresByName) = let Just ccs = Prof.costCentresOrderBy Prof.costCentreNo prof
                                                    centres = foldMap (\ cc -> [((Prof.costCentreNo cc, T.unpack (Prof.costCentreName cc)), toCC cc)]) ccs in
-          (IntMap.fromList $ first fst <$> centres, Map.fromList $ first snd <$> centres)
+          (IntMap.fromList (first fst <$> centres), Map.fromList (first snd <$> centres))
         toCC Prof.CostCentre{..} = CostCentre costCentreNo (T.unpack costCentreName) (Just (T.unpack costCentreModule)) (fmap T.unpack costCentreSrc)
 
         costCentreForHpId hpId = let hpName = B.unpack $ prNames IntMap.! hpId in costCentreForHpIdAndName hpId hpName
@@ -118,8 +118,7 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
           Just ((profId, rest), _) -> fromMaybe (CostCentre profId rest Nothing Nothing) (IntMap.lookup profId costCentresById)
           _ -> fromMaybe (CostCentre (-1) name Nothing Nothing) (Map.lookup name costCentresByName)
 
-        toLegend hpId name =
-          let cc@CostCentre{..} = costCentreForHpIdAndName hpId name in
+        toLegend cc@CostCentre{..} =
           case costCentreSource of
             Just source | source `notElem` ["<no location info", "<entire-module", "<built-in"] -> H.a ! AH.title (toValue source) $ string $ formattedName cc
             _ -> string $ formattedName cc
