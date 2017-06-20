@@ -34,7 +34,7 @@ renderProfile Profile{..} = H.docTypeHtml $ do
     H.ul ! A.id_ (toValue "legend") $ do
       H.input ! AH.type_ (toValue "search")
       for_ (Map.toList prNames) $ \ (costCentreId, name) ->
-        H.li ! A.id_ (toValue ("legend-" <> show costCentreId)) ! AH.style (toValue "color: " `mappend` colour costCentreId 1.0) $ string (B.unpack name)
+        H.li ! A.id_ (toValue ("legend-" <> show costCentreId)) ! AH.style (toValue "color: " `mappend` colour costCentreId) $ string (B.unpack name)
     H.div ! AH.class_ (toValue "graph") $
       S.svg
       ! S.customAttribute (S.stringTag "xmlns") (S.toValue "http://www.w3.org/2000/svg")
@@ -58,7 +58,7 @@ renderProfile Profile{..} = H.docTypeHtml $ do
               S.text_ ! A.x (toValue (0 :: Int)) ! A.y (toValue (graphHeight - i * 60)) ! A.class_ (toValue "label y") $ string (show i <> "M")
 
   where toPath :: CostCentreId -> [(Int, Time, Double)] -> S.Svg
-        toPath costCentreId points = S.path ! A.d (S.mkPath p) ! A.id_ (toValue ("path-" <> show costCentreId)) ! A.stroke (colour costCentreId 1) ! A.fill (colour costCentreId 0.5)
+        toPath costCentreId points = S.path ! A.d (S.mkPath p) ! A.id_ (toValue ("path-" <> show costCentreId)) ! A.stroke (colour costCentreId) ! A.fill (colour costCentreId)
           where p = let (_, x, path) = foldl' step (pred 0, 0, S.m 0 0) points in path >> S.l x 0
         step (prevI, prevX, steps) (i, x, y) = (i,x,) . (steps >>) $ if prevI < pred i then do
           S.l x 0
@@ -73,8 +73,8 @@ renderProfile Profile{..} = H.docTypeHtml $ do
         graphWidth = graphSeconds * 60
         graphHeight = graphMBs * 60
 
-        colour :: CostCentreId -> Double -> AttributeValue
-        colour costCentreId alpha =
+        colour :: CostCentreId -> AttributeValue
+        colour costCentreId =
           let hue = (35 * fromIntegral costCentreId) `mod'` 360
               saturation = 1
               value = 0.5
@@ -88,7 +88,7 @@ renderProfile Profile{..} = H.docTypeHtml $ do
                 _ | hue' `inRange` (3, 4) -> (0, x, chroma)
                 _ | hue' `inRange` (4, 5) -> (x, 0, chroma)
                 _ | hue' `inRange` (5, 6) -> (chroma, 0, x)
-          in stringValue $ "rgba(" <> show (ceiling (r * 255)) <> ", " <> show (ceiling (g * 255)) <> ", " <> show (ceiling (b * 255)) <> ", " <> show alpha <> ")"
+          in stringValue $ "rgb(" <> show (ceiling (r * 255)) <> ", " <> show (ceiling (g * 255)) <> ", " <> show (ceiling (b * 255)) <> ")"
 
         inRange x (l, u) = l <= x && x <= u
 
