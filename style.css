@@ -31,6 +31,10 @@ path:hover {
   fill-opacity: 1.0;
 }
 
+path.hidden {
+  display: none;
+}
+
 pre {
   background-color: rgb(246, 248, 250);
   color: rgb(36, 41, 46);
