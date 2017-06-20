@@ -52,7 +52,8 @@ renderProfile Profile{..} = H.docTypeHtml $ do
   where toPath :: CostCentreId -> [(Int, Time, Double)] -> S.Svg
         toPath costCentreId points = S.path ! A.d (S.mkPath p) ! A.id_ (S.toValue costCentreId) ! A.stroke (colour costCentreId 1) ! A.fill (colour costCentreId 0.5)
           where p = let (_, x, path) = foldl' step (pred 0, 0, S.m 0 0) points in path >> S.l x 0
-        step (prevI, _, steps) (i, x, y) = (i,x,) . (steps >>) $ if prevI < pred i then do
+        step (prevI, prevX, steps) (i, x, y) = (i,x,) . (steps >>) $ if prevI < pred i then do
+          S.l x 0
           S.m x (0 :: Double)
           S.l x y
         else
