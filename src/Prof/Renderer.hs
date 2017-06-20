@@ -68,7 +68,7 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
     H.script ! AH.type_ "text/javascript" $ string "run();"
 
   where toPath :: Hp.CostCentreId -> [(Int, Hp.Time, Double)] -> S.Svg
-        toPath costCentreId points = S.path ! A.d (S.mkPath p) ! A.id_ (toValue ("path-" <> show costCentreId)) ! dataAttribute "id" (toValue costCentreId) ! A.stroke (colour costCentreId) ! A.fill (colour costCentreId)
+        toPath hpId points = S.path ! A.d (S.mkPath p) ! A.id_ (toValue ("path-" <> show hpId)) ! dataAttribute "id" (toValue hpId) ! A.stroke (colour hpId) ! A.fill (colour hpId)
           where p = let (_, x, path) = foldl' step (pred 0, 0, S.m 0 0) points in path >> S.l x 0
         step (prevI, prevX, steps) (i, x, y) = (i,x,) . (steps >>) $ if prevI < pred i then do
           S.l x 0
