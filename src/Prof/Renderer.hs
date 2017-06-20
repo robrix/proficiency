@@ -36,7 +36,7 @@ renderProfile Profile{..} = H.docTypeHtml $ do
       for_ (Map.toList prNames) $ \ (costCentreId, name) ->
         H.li ! A.id_ (stringValue ("legend-" <> show costCentreId)) ! dataAttribute "id" (toValue costCentreId) ! AH.style ("color: " `mappend` colour costCentreId) $ do
           H.label $ do
-            H.input ! AH.type_ "checkbox" ! AH.checked ""
+            H.input ! AH.type_ "checkbox" ! AH.checked "" ! dataAttribute "id" (toValue costCentreId)
             string (B.unpack name)
     H.div ! AH.class_ "graph" $
       S.svg
