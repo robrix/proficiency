@@ -45,6 +45,8 @@ renderProfile Profile{..} = H.docTypeHtml $ do
           S.g ! A.id_ (toValue "grid") $ do
             for_ [0..pred graphSeconds] $ \ i -> do
               S.line ! A.x1 (toValue i) ! A.x2 (toValue i) ! A.y1 (toValue (0 :: Int)) ! A.y2 (toValue graphMBs)
+            for_ [0..pred graphMBs] $ \ i -> do
+              S.line ! A.x1 (toValue (0 :: Int)) ! A.x2 (toValue graphSeconds) ! A.y1 (toValue i) ! A.y2 (toValue i)
         S.g ! A.transform (S.translate 10 (graphHeight + 5)) ! A.class_ (toValue "axis x") $ do
           for_ [0..pred graphSeconds] $ \ i -> do
             S.text_ ! A.x (toValue (i * 60)) ! A.y (toValue (0 :: Int)) ! A.class_ (toValue "label x") $ string (show i <> "s")
