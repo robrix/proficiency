@@ -12,6 +12,8 @@ import Data.List as List
 import Data.List.NonEmpty (nonEmpty)
 import Data.Ord
 import Data.Semigroup
+import qualified Data.Text.Lazy.IO as T
+import qualified GHC.Prof as Prof
 import Profiling.Heap.Read (readProfile)
 import qualified Profiling.Heap.Types as Hp
 import System.FilePath.Glob
@@ -23,8 +25,8 @@ import qualified Text.Blaze.Svg11 as S
 import qualified Text.Blaze.Svg11.Attributes as A
 
 
-renderProfile :: Hp.Profile -> S.Svg
-renderProfile Hp.Profile{..} = H.docTypeHtml $ do
+renderProfile :: Hp.Profile -> Prof.Profile -> S.Svg
+renderProfile Hp.Profile{..} _ = H.docTypeHtml $ do
   H.head $ do
     H.title $ string (prJob <> " " <> prDate)
     H.link ! AH.rel "stylesheet" ! AH.href "style.css"
@@ -101,7 +103,9 @@ renderProfile Hp.Profile{..} = H.docTypeHtml $ do
 printRendering :: FilePath -> FilePath -> IO ()
 printRendering profilePath outputPath = do
   ([[hpPath], [profPath]], _) <- globDir [compile "*.hp", compile "*.prof"] profilePath
-  profile <- readProfile hpPath
-  case renderSvg . renderProfile <$> profile of
+  hp <- readProfile hpPath
+  profFile <- T.readFile profPath
+  let prof = either error Just (Prof.decode profFile)
+  case (renderSvg .) . renderProfile <$> hp <*> prof of
     Just svg -> B.writeFile outputPath svg
     _ -> error "Could not read profile."
