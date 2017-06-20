@@ -37,7 +37,7 @@ renderProfile Profile{..} = H.docTypeHtml $ do
       S.svg
       ! S.customAttribute (S.stringTag "xmlns") (S.toValue "http://www.w3.org/2000/svg")
       ! S.customAttribute (S.stringTag "xmlns:xlink") (S.toValue "http://www.w3.org/1999/xlink")
-      ! A.width (toValue (graphWidth + 20))
+      ! A.width (toValue (graphWidth + 40))
       ! A.height (toValue (graphHeight + 20)) $ do
         S.g ! A.transform (S.translate 5 (5 :: Int)) $ do
           S.g ! A.id_ (toValue "graph") ! A.transform (S.translate 20 graphHeight `mappend` S.scale 60 (-60)) $ do
