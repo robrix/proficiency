@@ -50,8 +50,10 @@ renderProfile Profile{..} = H.docTypeHtml $ do
           S.l x y
         toMap :: Int -> (Time, ProfileSample) -> Map.IntMap (Int, Time, Double)
         toMap i (time, samples) = Map.fromList (fmap ((i, time,) . fromIntegral) <$> samples)
-        graphWidth = maybe (60 :: Int) ((* 60) . ceiling . fst . fst) (uncons prSamples)
-        graphHeight = maybe (60 :: Int) ((* 60) . ceiling . (* (1/1024/1024)) . fromIntegral . maximum . fmap (snd . maximumBy (compare `on` snd) . snd)) (nonEmpty prSamples)
+        graphSeconds = maybe (1 :: Int) (ceiling . fst . fst) (uncons prSamples)
+        graphMBs = maybe (1 :: Int) (ceiling . (* (1/1024/1024)) . fromIntegral . maximum . fmap (snd . maximumBy (compare `on` snd) . snd)) (nonEmpty prSamples)
+        graphWidth = graphSeconds * 60
+        graphHeight = graphMBs * 60
 
         colour :: CostCentreId -> Double -> AttributeValue
         colour costCentreId alpha =
