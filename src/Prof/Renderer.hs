@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings, RecordWildCards, TupleSections #-}
 module Prof.Renderer where
 
+import Control.Applicative
 import Data.Bifunctor (first)
 import qualified Data.ByteString.Lazy as B hiding (unpack)
 import qualified Data.ByteString.Char8 as B (unpack)
@@ -80,7 +81,7 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
           S.l x y
         costCentreHpMap = let merged = IntMap.unionsWith (<>) (fmap pure <$> zipWith toMap [0..] (reverse prSamples)) in
           IntMap.mapWithKey (\ hpId samples -> (costCentreForHpId hpId, samples)) merged
-        costCentreForHpId hpId = let hpName = B.unpack $ prNames IntMap.! hpId in parseHpName hpName
+        costCentreForHpId hpId = let hpName = B.unpack $ prNames IntMap.! hpId in parseHpName hpName <|> Map.lookup hpName costCentresByName
         toMap :: Int -> (Hp.Time, Hp.ProfileSample) -> IntMap.IntMap (Int, Hp.Time, Double)
         toMap i (time, samples) = IntMap.fromList (fmap ((i, time,) . (* (1/1024/1024)) . fromIntegral) <$> samples)
         graphSeconds = maybe (1 :: Int) (ceiling . fst . fst) (uncons prSamples)
