@@ -34,7 +34,10 @@ renderProfile Profile{..} = H.docTypeHtml $ do
     H.ul ! A.id_ "legend" $ do
       H.input ! AH.type_ "search"
       for_ (Map.toList prNames) $ \ (costCentreId, name) ->
-        H.li ! A.id_ (stringValue ("legend-" <> show costCentreId)) ! dataAttribute "id" (toValue costCentreId) ! AH.style ("color: " `mappend` colour costCentreId) $ string (B.unpack name)
+        H.li ! A.id_ (stringValue ("legend-" <> show costCentreId)) ! dataAttribute "id" (toValue costCentreId) ! AH.style ("color: " `mappend` colour costCentreId) $ do
+          H.label $ do
+            H.input ! AH.type_ "checkbox" ! AH.checked ""
+            string (B.unpack name)
     H.div ! AH.class_ "graph" $
       S.svg
       ! S.customAttribute "xmlns" "http://www.w3.org/2000/svg"
