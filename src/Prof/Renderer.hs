@@ -13,6 +13,7 @@ import qualified Data.IntMap as IntMap
 import Data.List as List
 import Data.List.NonEmpty (nonEmpty)
 import qualified Data.Map as Map
+import Data.Maybe (fromMaybe)
 import Data.Ord
 import Data.Semigroup
 import qualified Data.Text as T
@@ -70,7 +71,7 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
               S.text_ ! A.x (toValue ((-5) :: Int)) ! A.y (toValue (graphHeight - i * 60)) ! A.class_ "label y" $ string (show i <> "M")
     H.script ! AH.type_ "text/javascript" $ string "run();"
 
-  where toPath :: Hp.CostCentreId -> (Maybe CostCentre, [(Int, Hp.Time, Double)]) -> S.Svg
+  where toPath :: Hp.CostCentreId -> (CostCentre, [(Int, Hp.Time, Double)]) -> S.Svg
         toPath hpId (_, points) = S.path ! A.d (S.mkPath p) ! A.id_ (toValue ("path-" <> show hpId)) ! dataAttribute "id" (toValue hpId) ! A.stroke (colour hpId) ! A.fill (colour hpId)
           where p = let (_, x, path) = foldl' step (pred 0, 0, S.m 0 0) points in path >> S.l x 0
         step (prevI, prevX, steps) (i, x, y) = (i,x,) . (steps >>) $ if prevI < pred i then do
@@ -81,7 +82,6 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
           S.l x y
         costCentreHpMap = let merged = IntMap.unionsWith (<>) (fmap pure <$> zipWith toMap [0..] (reverse prSamples)) in
           IntMap.mapWithKey (\ hpId samples -> (costCentreForHpId hpId, samples)) merged
-        costCentreForHpId hpId = let hpName = B.unpack $ prNames IntMap.! hpId in parseHpName hpName
         toMap :: Int -> (Hp.Time, Hp.ProfileSample) -> IntMap.IntMap (Int, Hp.Time, Double)
         toMap i (time, samples) = IntMap.fromList (fmap ((i, time,) . (* (1/1024/1024)) . fromIntegral) <$> samples)
         graphSeconds = maybe (1 :: Int) (ceiling . fst . fst) (uncons prSamples)
@@ -111,27 +111,24 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
         (costCentresById, costCentresByName) = let Just ccs = Prof.costCentresOrderBy Prof.costCentreNo prof
                                                    centres = foldMap (\ cc -> [((Prof.costCentreNo cc, T.unpack (Prof.costCentreName cc)), toCC cc)]) ccs in
           (IntMap.fromList $ first fst <$> centres, Map.fromList $ first snd <$> centres)
-        toCC Prof.CostCentre{..} = CostCentre costCentreNo (T.unpack costCentreName) (T.unpack costCentreModule) (fmap T.unpack costCentreSrc)
+        toCC Prof.CostCentre{..} = CostCentre costCentreNo (T.unpack costCentreName) (Just (T.unpack costCentreModule)) (fmap T.unpack costCentreSrc)
 
-        parseHpName name
-          | matched <- readParen True reads name :: [(Int, String)]
-          , (profId, _) : _ <- matched
-          = IntMap.lookup profId costCentresById <|> Map.lookup name costCentresByName
-          | otherwise
-          = Nothing
+        costCentreForHpId hpId = let hpName = B.unpack $ prNames IntMap.! hpId in costCentreForHpIdAndName hpId hpName
+        costCentreForHpIdAndName hpId name = case uncons (readParen True reads name) of
+          Just ((profId, rest), _) -> fromMaybe (CostCentre profId rest Nothing Nothing) (IntMap.lookup profId costCentresById)
+          _ -> fromMaybe (CostCentre (-1) name Nothing Nothing) (Map.lookup name costCentresByName)
 
-        toLegend hpId name
-          | Just CostCentre{..} <- parseHpName name
-          = case costCentreSource of
-            Just source -> H.a ! AH.title (toValue source) $ string $ costCentreModuleName <> "." <> costCentreName
-            _ -> string $ costCentreModuleName <> "." <> costCentreName
-          | otherwise
-          = string name
+        toLegend hpId name =
+          let cc@CostCentre{..} = costCentreForHpIdAndName hpId name in
+          case costCentreSource of
+            Just source -> H.a ! AH.title (toValue source) $ string $ formattedName cc
+            _ -> string $ formattedName cc
+        formattedName CostCentre{..} = maybe costCentreName (<> "." <> costCentreName) costCentreModuleName
 
 data CostCentre = CostCentre
   { costCentreProfId :: Int
   , costCentreName :: String
-  , costCentreModuleName :: String
+  , costCentreModuleName :: Maybe String
   , costCentreSource :: Maybe String
   }
 
