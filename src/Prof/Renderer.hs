@@ -47,7 +47,9 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
           Just _ -> H.li ! A.id_ (stringValue ("legend-" <> show costCentreProfId)) ! dataAttribute "id" (toValue costCentreProfId) ! AH.style ("color: " `mappend` colour costCentreProfId) $ do
             H.label $ do
               H.input ! AH.type_ "checkbox" ! AH.checked "" ! dataAttribute "id" (toValue costCentreProfId)
-              toLegend cc
+              case costCentreSource of
+                Just source | source `notElem` ["<no location info", "<entire-module", "<built-in"] -> H.a ! AH.title (toValue source) $ string $ formattedName cc
+                _ -> string $ formattedName cc
           _ -> pure ()
     H.div ! AH.class_ "graph" $
       S.svg
@@ -129,10 +131,6 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
           Just ((profId, rest), _) -> fromMaybe (CostCentre profId (Just hpId) rest Nothing Nothing) (IntMap.lookup profId byId)
           _ -> fromMaybe (CostCentre (-1) (IntMap.lookup (-1) hpIdsByProfId) name Nothing Nothing) (Map.lookup name costCentresByName)
 
-        toLegend cc@CostCentre{..} =
-          case costCentreSource of
-            Just source | source `notElem` ["<no location info", "<entire-module", "<built-in"] -> H.a ! AH.title (toValue source) $ string $ formattedName cc
-            _ -> string $ formattedName cc
         formattedName CostCentre{..} = maybe costCentreName (<> "." <> costCentreName) costCentreModuleName
 
 data CostCentre = CostCentre
