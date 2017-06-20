@@ -53,7 +53,7 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
         S.g ! A.transform (S.translate 25 (5 :: Int)) $ do
           S.g ! A.id_ "graph" ! A.transform (S.translate 0 graphHeight `mappend` S.scale 60 (-60)) $ do
             S.g ! A.id_ "overlaid" $ do
-              foldr (>>) (pure ()) $ Map.mapWithKey toPath . Map.unionsWith (<>) . fmap (fmap pure) $ zipWith toMap [0..] (reverse prSamples)
+              foldr (>>) (pure ()) $ Map.mapWithKey toPath . mergeMaps $ zipWith toMap [0..] (reverse prSamples)
             S.g ! A.id_ "grid" $ do
               for_ [0..graphSeconds] $ \ i -> do
                 S.line ! A.x1 (toValue i) ! A.x2 (toValue i) ! A.y1 (toValue (0 :: Int)) ! A.y2 (toValue graphMBs)
@@ -76,6 +76,7 @@ renderProfile Hp.Profile{..} prof = H.docTypeHtml $ do
           S.l x y
         else
           S.l x y
+        mergeMaps = Map.unionsWith (<>) . fmap (fmap pure)
         toMap :: Int -> (Hp.Time, Hp.ProfileSample) -> Map.IntMap (Int, Hp.Time, Double)
         toMap i (time, samples) = Map.fromList (fmap ((i, time,) . (* (1/1024/1024)) . fromIntegral) <$> samples)
         graphSeconds = maybe (1 :: Int) (ceiling . fst . fst) (uncons prSamples)
