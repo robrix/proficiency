@@ -40,6 +40,13 @@ path.active.hidden {
   fill: none;
 }
 
+#graph.filtered path {
+  display: none;
+}
+#graph.filtered path.filtered {
+  display: initial;
+}
+
 pre {
   background-color: rgb(246, 248, 250);
   color: rgb(36, 41, 46);
@@ -86,6 +93,13 @@ code {
 #legend li.active,
 #legend li:hover {
   background-color: rgb(246, 248, 250);
+}
+
+#legend.filtered li {
+  display: none;
+}
+#legend.filtered li.filtered {
+  display: block;
 }
 
 #grid line {

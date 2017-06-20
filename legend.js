@@ -49,14 +49,28 @@ function run() {
   }
 
   let toggleAll = document.querySelector("#toggle-all");
-  toggleAll.addEventListener('change', event => checkboxes.forEach(checkbox => {
+  let toggleCheckbox = checkbox => {
     checkbox.checked = toggleAll.checked;
     var event = new Event('change');
     checkbox.dispatchEvent(event);
-  }));
+  };
+  toggleAll.addEventListener('change', event => checkboxes.forEach(toggleCheckbox));
 
   let filterLegend = document.querySelector("#filter-legend");
-  filterLegend.addEventListener('change', event => {
-    ;
+  filterLegend.addEventListener('input', event => {
+    if (filterLegend.value !== "") {
+      document.querySelector("#legend").classList.add("filtered");
+      document.querySelector("#graph").classList.add("filtered");
+      for (let elem of document.querySelectorAll("#legend li, #graph path")) {
+        if (elem.getAttribute("data-name").match(new RegExp(filterLegend.value, "i"))) {
+          elem.classList.add("filtered");
+        } else {
+          elem.classList.remove("filtered");
+        }
+      }
+    } else {
+      document.querySelector("#legend").classList.remove("filtered");
+      document.querySelector("#graph").classList.remove("filtered");
+    }
   });
 }
